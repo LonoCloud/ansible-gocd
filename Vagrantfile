@@ -32,8 +32,9 @@ Vagrant.configure("2") do |config|
     # Use this if you want to override the Role defaults for example
     # to force a specific number of agents.
     ansible.extra_vars = {
-      GOCD_ADMIN_EMAIL: 'david.rupp@viasat.com'
-      GOCD_AGENT_INSTANCES: 4
+      GOCD_ADMIN_EMAIL: 'david.rupp@viasat.com',
+      GOCD_AGENT_INSTANCES: 4,
+      GOCD_SCM_GIT: true
     }
   end
 
