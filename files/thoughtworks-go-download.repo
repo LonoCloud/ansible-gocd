@@ -5,3 +5,4 @@ name=Thoughtworks Go Repository
 baseurl=http://dl.bintray.com/gocd/gocd-rpm/
 enabled=1
 gpgcheck=0
+proxy=http://vcasquidp01.hq.corp.viasat.com:8080
