@@ -26,50 +26,35 @@
   notify:
      - ensure go-server running
 
-- name: check if firewalld is installed
-  sudo: yes
-  command: which firewalld
-  ignore_errors: true
-  register: firewalld
-  changed_when: false
+- name: get iptables rules
+  shell: iptables -L
+  register: iptablesrules
+  always_run: yes
+  sudo: true
 
-- name: check if firewalld service is running
-  command: firewall-cmd --state
-  sudo: yes
-  when: firewalld|success
-  changed_when: false
-  register: firewalld_svc
-  ignore_errors: true
+- name: add go admin iptable rule (HTTP)
+  command: /sbin/iptables -I INPUT 1 -p tcp --dport 8153 -j ACCEPT -m comment --comment "Go admin (HTTP)"
+  sudo: true
+  when: iptablesrules.stdout.find("dpt:8153") == -1
 
-- name: enable Go HTTP traffic through firewalld
-  sudo: yes
-  firewalld: port=8153/tcp permanent=true state=enabled
-  when: firewalld|success and firewalld_svc.stdout=='running'
-  notify:
-    - restart firewalld
+- name: add go admin iptable rule (HTTPS)
+  command: /sbin/iptables -I INPUT 1 -p tcp --dport 8154 -j ACCEPT -m comment --comment "Go CD admin (HTTPS)"
+  sudo: true
+  when: iptablesrules.stdout.find("dpt:8154") == -1
 
-- name: enable Go HTTPS traffic through firewalld
-  sudo: yes
-  firewalld: port=8154/tcp permanent=true state=enabled
-  when: firewalld|success and firewalld_svc.stdout=='running'
-  notify:
-    - restart firewalld
+- name: save iptables
+  command: /sbin/iptables-save
+  sudo: true
 
-- name: check if UFW is available
-  command: which ufw
-  ignore_errors: true
-  register: ufw
-  changed_when: false
+- name: restart iptables
+  service: name=iptables state=restarted
+  sudo: true
 
-- name: enable Go HTTP traffic through ufw
-  sudo: yes
-  ufw: rule=allow port=8153 proto=tcp
-  when: ufw|success
-
-- name: enable Go HTTPS traffic through ufw
-  sudo: yes
-  ufw: rule=allow port=8154 proto=tcp
-  when: ufw|success
+- name: get iptables rules
+  shell: iptables -L
+  register: iptablesrules
+  always_run: yes
+  sudo: true
 
 - name: create script for automated Go configuration backups to Git
   template: backup=no dest=/usr/share/go-server/ mode=0755 src=backup_to_git.sh
